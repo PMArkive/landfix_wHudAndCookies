@@ -1,5 +1,6 @@
 # landfix_wHudAndCookies
-Modified Landfix plugin that saves players settings and has a toggleable HUD.
+Modified Landfix plugin that saves players settings and has a toggleable HUD.    
+Code modified from: https://github.com/enimmy/not-broken-landfix    
 
 ## Commands    
 /lf - Enable Landfix    
