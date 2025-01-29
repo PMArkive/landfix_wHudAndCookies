@@ -102,6 +102,7 @@ public void OnClientPutInServer(int client)
     SDKHook(client, SDKHook_GroundEntChangedPost, OnGroundChange);
     gI_Jump[client] = 0;
     gB_Enabled[client] = false;
+    gB_UseHud[client] = true;
     
     // Load player cookies
     OnClientCookiesCached(client);
