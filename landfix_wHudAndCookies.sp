@@ -87,7 +87,15 @@ public void OnClientCookiesCached(int client)
 
     // Load HUD enabled state from the cookie
     g_cUseHudCookie.Get(client, buffer, sizeof(buffer));
-    gB_UseHud[client] = (StringToInt(buffer) == 1);
+
+    if (buffer[0] == '\0')
+    {
+        gB_UseHud[client] = true;
+        Format(buffer, sizeof(buffer), "1");
+        g_cUseHudCookie.Set(client, buffer);
+    }
+    else
+        gB_UseHud[client] = (StringToInt(buffer) == 1);
     
     if (gB_UseHud[client] && gB_Enabled[client])
     {
