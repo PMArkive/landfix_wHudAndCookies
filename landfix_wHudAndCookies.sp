@@ -319,43 +319,6 @@ void SetHudPosition(int client)
 	}
 }
 
-float SetHudPositionX(int hudPosition)
-{
-	float hudPositionX = 0.0;
-	
-	// Top Left
-	if (hudPosition == 0)
-	{
-		return hudPositionX = 0.01;
-	}
-	// Top Right
-	else if (hudPosition == 1)
-	{
-		return hudPositionX = 0.895;
-	}
-	// Top Center
-	else if (hudPosition == 2)
-	{
-		return hudPositionX = 0.453;
-	}
-}
-
-float SetHudPositionY(int hudPosition)
-{
-	float hudPositionY = 0.0;
-	
-	// Top Left
-	if (hudPosition == 0)
-	{
-		return hudPositionY = 0.16;
-	}
-	// Top Right || Top Center
-	else if (hudPosition == 1 || hudPosition == 2)
-	{
-		return hudPositionY = 0.01;
-	}
-}
-
 public Action Command_LandFix(int client, int args) 
 {
     if (client == 0)
