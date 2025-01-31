@@ -60,14 +60,6 @@ public void OnPluginStart()
             
             if (AreClientCookiesCached(client))
                 OnClientCookiesCached(client);
-                
-            // This if statement is probably not needed but idk man, the plugin is working and i'm kinda lazy rn
-            if (gB_UseHud[client] && gB_Enabled[client])
-		    {
-		        gI_HudTimerID[client]++;
-		        iLastValidID[client] = gI_HudTimerID[client];        
-		        g_hudTimers[client] = CreateTimer(1.0, Timer_ShowHudText, client, TIMER_REPEAT);
-		    }
         }
     }
 
@@ -79,27 +71,22 @@ public void OnClientCookiesCached(int client)
     if (IsFakeClient(client))
         return;
 
-    char buffer[8];
+    char buffer[4];
 
     // Load Landfix enabled cookie
     g_cEnabledCookie.Get(client, buffer, sizeof(buffer));
-    gB_Enabled[client] = (StringToInt(buffer) == 1);
+    gB_Enabled[client] = (buffer[0] != '\0' && StringToInt(buffer) == 1);
+
+    if (buffer[0] == '\0')
+        g_cEnabledCookie.Set(client, "0");
 
     // Load HUD enabled cookie
     g_cUseHudCookie.Get(client, buffer, sizeof(buffer));
-    
-    // Force Landfix Type to use Haze's on connect
-    gB_LandfixType[client] = true;
-    
+    gB_UseHud[client] = (buffer[0] != '\0' && StringToInt(buffer) == 1);
+
     if (buffer[0] == '\0')
-    {
-        gB_UseHud[client] = true;
-        Format(buffer, sizeof(buffer), "1");
-        g_cUseHudCookie.Set(client, buffer);
-    }
-    else
-        gB_UseHud[client] = (StringToInt(buffer) == 1);
-    
+        g_cUseHudCookie.Set(client, "1");
+
     if (gB_UseHud[client] && gB_Enabled[client])
     {
         gI_HudTimerID[client]++;
@@ -111,13 +98,12 @@ public void OnClientCookiesCached(int client)
 public void OnClientPutInServer(int client)
 {
     SDKHook(client, SDKHook_GroundEntChangedPost, OnGroundChange);
-    gI_Jump[client] = 0;
-    gB_Enabled[client] = false;
-    gB_UseHud[client] = true;
     
     // Force Landfix Type to use Haze's on connect
     gB_LandfixType[client] = true;
     
+    gI_Jump[client] = 0;
+
     // Load player cookies
     OnClientCookiesCached(client);
 }
@@ -220,7 +206,7 @@ public Action Command_LandFixHud(int client, int args)
     
     // Save the new HUD enabled state in the cookie
     char buffer[2];
-    buffer[0] = view_as<char>(gB_UseHud[client]) + '0';
+    Format(buffer, sizeof(buffer), "%d", gB_UseHud[client]);
     g_cUseHudCookie.Set(client, buffer);
 
     if (!gB_UseHud[client] && gB_Enabled[client])
@@ -270,21 +256,24 @@ public Action Command_LandFix(int client, int args)
             KillTimer(g_hudTimers[client]);
             g_hudTimers[client] = null;
         }
-
-        if (gB_UseHud[client])
-        {
-        	gI_HudTimerID[client]++;
+	
+		if (gB_UseHud[client])
+		{
+			gI_HudTimerID[client]++;
 	        iLastValidID[client] = gI_HudTimerID[client];        
-	    	g_hudTimers[client] = CreateTimer(1.0, Timer_ShowHudText, client, TIMER_REPEAT);
-        }
+	        g_hudTimers[client] = CreateTimer(1.0, Timer_ShowHudText, client, TIMER_REPEAT);
+		}
     }
     else 
     {
-        // Stop the HUD timer when disabling LandFix
-        if (g_hudTimers[client] != null)
+        // Stop the HUD timer when disabling LandFix - if HUD is On
+        if (gB_UseHud[client])
         {
-            KillTimer(g_hudTimers[client]);
-            g_hudTimers[client] = null;
+        	if (g_hudTimers[client] != null)
+        	{
+	            KillTimer(g_hudTimers[client]);
+	            g_hudTimers[client] = null;
+        	}
         }
     }
 
