@@ -292,7 +292,7 @@ public Action Command_LandFixHudPos(int client, int args)
 	g_cHudPositionCookie.Set(client, buffer);
 
 	Shavit_PrintToChat(client, "Landfix Hud position set to: %d", hudPosition);
-	Shavit_PrintToChat(client, "Exact Landfix Hud Position: X: %.3f | Y: %.3f", gF_HudPositionX[client], gF_HudPositionY[client]);
+	//Shavit_PrintToChat(client, "Exact Landfix Hud Position: X: %.3f | Y: %.3f", gF_HudPositionX[client], gF_HudPositionY[client]);
 
 	return Plugin_Handled;
 }
