@@ -8,5 +8,6 @@ Code modified from: https://github.com/enimmy/not-broken-landfix
 ## Commands    
 /lf - Enable Landfix    
 /lfhud - Enable Landfix Hud    
+/lfhudpos <number> Change Hud Position (0-2)
 
 ![Alt text](https://i.imgur.com/eKNKt8C.jpeg)  

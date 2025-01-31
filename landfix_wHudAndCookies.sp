@@ -19,6 +19,10 @@ public Plugin myinfo =
 
 int gI_TicksOnGround[MAXPLAYERS + 1];
 int gI_Jump[MAXPLAYERS + 1];
+int gI_HudPosition[MAXPLAYERS + 1];
+float gF_HudPositionX[MAXPLAYERS + 1];
+float gF_HudPositionY[MAXPLAYERS + 1];
+float gF_HudTimerDuration = 0.5;
 
 bool gB_LandfixType[MAXPLAYERS + 1] = {true, ...}; // initializing this as true will always start as HAZE lfType
 bool gB_Enabled[MAXPLAYERS+1] = {false, ...};
@@ -30,6 +34,7 @@ new Handle:g_hudTimers[MAXPLAYERS + 1] = { null };
 
 Cookie g_cEnabledCookie;
 Cookie g_cUseHudCookie;
+Cookie g_cHudPositionCookie;
 
 public void OnPluginStart()
 {
@@ -41,16 +46,23 @@ public void OnPluginStart()
     RegConsoleCmd("sm_64fix", Command_LandFix, "Landfix");
     RegConsoleCmd("sm_64", Command_LandFix, "Landfix");
     
-    // Toggle Landfix Hud
+    // Toggle Landfix HUD
     RegConsoleCmd("sm_landfixhud", Command_LandFixHud, "LandfixHud");
     RegConsoleCmd("sm_lfhud", Command_LandFixHud, "LandfixHud");
     RegConsoleCmd("sm_landhud", Command_LandFixHud, "LandfixHud");
     RegConsoleCmd("sm_lhud", Command_LandFixHud, "LandfixHud");
     
+    // Change HUD Position
+    RegConsoleCmd("sm_lfhp", Command_LandFixHudPos, "LandfixHudPos");
+    RegConsoleCmd("sm_lfhudpos", Command_LandFixHudPos, "LandfixHudPos");
+    RegConsoleCmd("sm_lfhudposition", Command_LandFixHudPos, "LandfixHudPos");
+    
     HookEvent("player_jump", PlayerJump);
     
+    // Cookies
     g_cEnabledCookie = new Cookie("landfix_enabled", "Landfix enabled state", CookieAccess_Protected);
     g_cUseHudCookie = new Cookie("landfix_hud", "Landfix HUD enabled state", CookieAccess_Protected);
+    g_cHudPositionCookie = new Cookie("landfix_hud_position", "Landfix HUD position state", CookieAccess_Protected);
 
     for(int client = 1; client <= MaxClients; client++)
     {
@@ -71,7 +83,7 @@ public void OnClientCookiesCached(int client)
     if (IsFakeClient(client))
         return;
 
-    char buffer[4];
+    char buffer[8];
 
     // Load Landfix enabled cookie
     g_cEnabledCookie.Get(client, buffer, sizeof(buffer));
@@ -91,8 +103,24 @@ public void OnClientCookiesCached(int client)
     {
         gI_HudTimerID[client]++;
         iLastValidID[client] = gI_HudTimerID[client];        
-        g_hudTimers[client] = CreateTimer(1.0, Timer_ShowHudText, client, TIMER_REPEAT);
+        g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
     }
+    
+    // Load HUD position cookie
+    g_cHudPositionCookie.Get(client, buffer, sizeof(buffer));
+    
+    if (buffer[0] == '\0')
+    {
+    	gI_HudPosition[client] = 0;
+    	g_cHudPositionCookie.Set(client, "0");
+    	
+    	gF_HudPositionX[client] = 0.01;
+    	gF_HudPositionY[client] = 0.16;
+    }
+    else
+    	gI_HudPosition[client] = StringToInt(buffer);
+    	
+    SetHudPosition(client);
 }
 
 public void OnClientPutInServer(int client)
@@ -217,7 +245,7 @@ public Action Command_LandFixHud(int client, int args)
             g_hudTimers[client] = null;
         }
 
-        SetHudTextParams(0.895, 0.01, 0.0, 0, 0, 0, 0, 0.0, 0.0, 0);
+        SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], 0.0, 0, 0, 0, 0, 0.0, 0.0, 0);
         ShowHudText(client, -1, " ");
     }
     else if (gB_UseHud[client] && gB_Enabled[client])
@@ -230,10 +258,102 @@ public Action Command_LandFixHud(int client, int args)
 
         gI_HudTimerID[client]++;
         iLastValidID[client] = gI_HudTimerID[client];        
-        g_hudTimers[client] = CreateTimer(1.0, Timer_ShowHudText, client, TIMER_REPEAT);
+        g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
     }
 
     return Plugin_Handled;
+}
+
+public Action Command_LandFixHudPos(int client, int args)
+{
+	if (args < 1)
+	{
+		Shavit_PrintToChat(client, "Choose a position from 0 to 2, example: /lfhudpos 1");
+		Shavit_PrintToChat(client, "Current Landfix Hud position: %d", gI_HudPosition[client]);
+		return Plugin_Handled;
+	}
+	
+	char arg[2];
+    GetCmdArg(1, arg, sizeof(arg));
+    int hudPosition = StringToInt(arg);
+	
+	if (hudPosition < 0 || hudPosition > 2)
+	{
+		Shavit_PrintToChat(client, "Choose a position from 0 to 2, example: /lfhudpos 1");
+		Shavit_PrintToChat(client, "Current Landfix Hud position: %d", gI_HudPosition[client]);
+		return Plugin_Handled;
+	}
+	
+	gI_HudPosition[client] = hudPosition;
+	SetHudPosition(client);
+	
+	char buffer[2];
+	Format(buffer, sizeof(buffer), "%d", gI_HudPosition[client]);
+	g_cHudPositionCookie.Set(client, buffer);
+
+	Shavit_PrintToChat(client, "Landfix Hud position set to: %d", hudPosition);
+	Shavit_PrintToChat(client, "Exact Landfix Hud Position: X: %.3f | Y: %.3f", gF_HudPositionX[client], gF_HudPositionY[client]);
+
+	return Plugin_Handled;
+}
+
+void SetHudPosition(int client)
+{
+	// Top Left
+	if (gI_HudPosition[client] == 0)
+	{
+		gF_HudPositionX[client] = 0.01;
+		gF_HudPositionY[client] = 0.16;
+	}
+	// Top Right
+	else if (gI_HudPosition[client] == 1)
+	{
+		gF_HudPositionX[client] = 0.895;
+		gF_HudPositionY[client] = 0.01;
+	}
+	// Top Center
+	else if (gI_HudPosition[client] == 2)
+	{
+		gF_HudPositionX[client] = 0.453;
+		gF_HudPositionY[client] = 0.01;
+	}
+}
+
+float SetHudPositionX(int hudPosition)
+{
+	float hudPositionX = 0.0;
+	
+	// Top Left
+	if (hudPosition == 0)
+	{
+		return hudPositionX = 0.01;
+	}
+	// Top Right
+	else if (hudPosition == 1)
+	{
+		return hudPositionX = 0.895;
+	}
+	// Top Center
+	else if (hudPosition == 2)
+	{
+		return hudPositionX = 0.453;
+	}
+}
+
+float SetHudPositionY(int hudPosition)
+{
+	float hudPositionY = 0.0;
+	
+	// Top Left
+	if (hudPosition == 0)
+	{
+		return hudPositionY = 0.16;
+	}
+	// Top Right || Top Center
+	else if (hudPosition == 1 || hudPosition == 2)
+	{
+		return hudPositionY = 0.01;
+	}
 }
 
 public Action Command_LandFix(int client, int args) 
@@ -246,7 +366,7 @@ public Action Command_LandFix(int client, int args)
     
     // Save the new Landfix enabled state in the cookie
     char buffer[2];
-    buffer[0] = view_as<char>(gB_Enabled[client]) + '0';
+    Format(buffer, sizeof(buffer), "%d", gB_Enabled[client]);
     g_cEnabledCookie.Set(client, buffer);
 
     if (gB_Enabled[client])
@@ -261,7 +381,7 @@ public Action Command_LandFix(int client, int args)
 		{
 			gI_HudTimerID[client]++;
 	        iLastValidID[client] = gI_HudTimerID[client];        
-	        g_hudTimers[client] = CreateTimer(1.0, Timer_ShowHudText, client, TIMER_REPEAT);
+	        g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
 		}
     }
     else 
@@ -288,7 +408,7 @@ public Action Timer_ShowHudText(Handle timer, any client)
     if (gI_HudTimerID[client] != iLastValidID[client])
         return Plugin_Stop;
 
-    SetHudTextParams(0.895, 0.01, 1.0, 255, 255, 255, 255, 0.0, 0.0, 0);
+    SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], gF_HudTimerDuration, 255, 255, 255, 255, 0.0, 0.0, 0);
     ShowHudText(client, -1, "Landfix: On");
 
     return Plugin_Continue;
