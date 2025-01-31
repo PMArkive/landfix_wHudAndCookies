@@ -140,8 +140,8 @@ public void OnClientDisconnect(int client)
 {
 	if (g_hudTimers[client] != null)
 	{
-	    KillTimer(g_hudTimers[client]);
-	    g_hudTimers[client] = null;
+		KillTimer(g_hudTimers[client]);
+		g_hudTimers[client] = null;
 	}
 }
 
@@ -226,42 +226,42 @@ public Action Command_LandFixType(int client, int args)
 
 public Action Command_LandFixHud(int client, int args) 
 {
-    if (client == 0)
-        return Plugin_Handled;
-
-    gB_UseHud[client] = !gB_UseHud[client];
-    Shavit_PrintToChat(client, "Landfix Hud: %s", gB_UseHud[client] ? "On" : "Off");
-    
-    // Save the new HUD enabled state in the cookie
-    char buffer[2];
-    Format(buffer, sizeof(buffer), "%d", gB_UseHud[client]);
-    g_cUseHudCookie.Set(client, buffer);
-
-    if (!gB_UseHud[client] && gB_Enabled[client])
-    {
-        if (g_hudTimers[client] != null)
-        {
-            KillTimer(g_hudTimers[client]);
-            g_hudTimers[client] = null;
-        }
-
-        SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], 0.0, 0, 0, 0, 0, 0.0, 0.0, 0);
-        ShowHudText(client, -1, " ");
-    }
-    else if (gB_UseHud[client] && gB_Enabled[client])
-    {
-        if (g_hudTimers[client] != null)
-        {
-            KillTimer(g_hudTimers[client]);
-            g_hudTimers[client] = null;
-        }
-
-        gI_HudTimerID[client]++;
-        iLastValidID[client] = gI_HudTimerID[client];        
-        g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
-    }
-
-    return Plugin_Handled;
+	if (client == 0)
+		return Plugin_Handled;
+	
+	gB_UseHud[client] = !gB_UseHud[client];
+	Shavit_PrintToChat(client, "Landfix Hud: %s", gB_UseHud[client] ? "On" : "Off");
+	
+	// Save the new HUD enabled state in the cookie
+	char buffer[2];
+	Format(buffer, sizeof(buffer), "%d", gB_UseHud[client]);
+	g_cUseHudCookie.Set(client, buffer);
+	
+	if (!gB_UseHud[client] && gB_Enabled[client])
+	{
+		if (g_hudTimers[client] != null)
+		{
+			KillTimer(g_hudTimers[client]);
+			g_hudTimers[client] = null;
+		}
+		
+		SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], 0.0, 0, 0, 0, 0, 0.0, 0.0, 0);
+		ShowHudText(client, -1, " ");
+	}
+	else if (gB_UseHud[client] && gB_Enabled[client])
+	{
+		if (g_hudTimers[client] != null)
+		{
+			KillTimer(g_hudTimers[client]);
+			g_hudTimers[client] = null;
+		}
+		
+		gI_HudTimerID[client]++;
+		iLastValidID[client] = gI_HudTimerID[client];        
+		g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
+	}
+	
+	return Plugin_Handled;
 }
 
 public Action Command_LandFixHudPos(int client, int args)
