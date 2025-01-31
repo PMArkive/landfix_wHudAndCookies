@@ -38,111 +38,111 @@ Cookie g_cHudPositionCookie;
 
 public void OnPluginStart()
 {
-    // Toggle Landfix
-    RegConsoleCmd("sm_landfix", Command_LandFix, "Landfix");
-    RegConsoleCmd("sm_lfix", Command_LandFix, "Landfix");
-    RegConsoleCmd("sm_lf", Command_LandFix, "Landfix");
-    RegConsoleCmd("sm_land", Command_LandFix, "Landfix");
-    RegConsoleCmd("sm_64fix", Command_LandFix, "Landfix");
-    RegConsoleCmd("sm_64", Command_LandFix, "Landfix");
-    
-    // Toggle Landfix HUD
-    RegConsoleCmd("sm_landfixhud", Command_LandFixHud, "LandfixHud");
-    RegConsoleCmd("sm_lfhud", Command_LandFixHud, "LandfixHud");
-    RegConsoleCmd("sm_landhud", Command_LandFixHud, "LandfixHud");
-    RegConsoleCmd("sm_lhud", Command_LandFixHud, "LandfixHud");
-    
-    // Change HUD Position
-    RegConsoleCmd("sm_lfhp", Command_LandFixHudPos, "LandfixHudPos");
-    RegConsoleCmd("sm_lfhudpos", Command_LandFixHudPos, "LandfixHudPos");
-    RegConsoleCmd("sm_lfhudposition", Command_LandFixHudPos, "LandfixHudPos");
-    
-    HookEvent("player_jump", PlayerJump);
-    
-    // Cookies
-    g_cEnabledCookie = new Cookie("landfix_enabled", "Landfix enabled state", CookieAccess_Protected);
-    g_cUseHudCookie = new Cookie("landfix_hud", "Landfix HUD enabled state", CookieAccess_Protected);
-    g_cHudPositionCookie = new Cookie("landfix_hud_position", "Landfix HUD position state", CookieAccess_Protected);
-
-    for(int client = 1; client <= MaxClients; client++)
-    {
-        if(IsClientInGame(client) && !IsFakeClient(client))
-        {
-            OnClientPutInServer(client);
-            
-            if (AreClientCookiesCached(client))
-                OnClientCookiesCached(client);
-        }
-    }
-
-    AutoExecConfig();
+	// Toggle Landfix
+	RegConsoleCmd("sm_landfix", Command_LandFix, "Landfix");
+	RegConsoleCmd("sm_lfix", Command_LandFix, "Landfix");
+	RegConsoleCmd("sm_lf", Command_LandFix, "Landfix");
+	RegConsoleCmd("sm_land", Command_LandFix, "Landfix");
+	RegConsoleCmd("sm_64fix", Command_LandFix, "Landfix");
+	RegConsoleCmd("sm_64", Command_LandFix, "Landfix");
+	
+	// Toggle Landfix HUD
+	RegConsoleCmd("sm_landfixhud", Command_LandFixHud, "LandfixHud");
+	RegConsoleCmd("sm_lfhud", Command_LandFixHud, "LandfixHud");
+	RegConsoleCmd("sm_landhud", Command_LandFixHud, "LandfixHud");
+	RegConsoleCmd("sm_lhud", Command_LandFixHud, "LandfixHud");
+	
+	// Change HUD Position
+	RegConsoleCmd("sm_lfhp", Command_LandFixHudPos, "LandfixHudPos");
+	RegConsoleCmd("sm_lfhudpos", Command_LandFixHudPos, "LandfixHudPos");
+	RegConsoleCmd("sm_lfhudposition", Command_LandFixHudPos, "LandfixHudPos");
+	
+	HookEvent("player_jump", PlayerJump);
+	
+	// Cookies
+	g_cEnabledCookie = new Cookie("landfix_enabled", "Landfix enabled state", CookieAccess_Protected);
+	g_cUseHudCookie = new Cookie("landfix_hud", "Landfix HUD enabled state", CookieAccess_Protected);
+	g_cHudPositionCookie = new Cookie("landfix_hud_position", "Landfix HUD position state", CookieAccess_Protected);
+	
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		if(IsClientInGame(client) && !IsFakeClient(client))
+		{
+			OnClientPutInServer(client);
+			
+			if (AreClientCookiesCached(client))
+			    OnClientCookiesCached(client);
+		}
+	}
+	
+	AutoExecConfig();
 }
 
 public void OnClientCookiesCached(int client)
 {
-    if (IsFakeClient(client))
-        return;
-
-    char buffer[8];
-
-    // Load Landfix enabled cookie
-    g_cEnabledCookie.Get(client, buffer, sizeof(buffer));
-    gB_Enabled[client] = (buffer[0] != '\0' && StringToInt(buffer) == 1);
-
-    if (buffer[0] == '\0')
-        g_cEnabledCookie.Set(client, "0");
-
-    // Load HUD enabled cookie
-    g_cUseHudCookie.Get(client, buffer, sizeof(buffer));
-    gB_UseHud[client] = (buffer[0] != '\0' && StringToInt(buffer) == 1);
-
-    if (buffer[0] == '\0')
-        g_cUseHudCookie.Set(client, "1");
-
-    if (gB_UseHud[client] && gB_Enabled[client])
-    {
-        gI_HudTimerID[client]++;
-        iLastValidID[client] = gI_HudTimerID[client];        
-        g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
-    }
-    
-    // Load HUD position cookie
-    g_cHudPositionCookie.Get(client, buffer, sizeof(buffer));
-    
-    if (buffer[0] == '\0')
-    {
-    	gI_HudPosition[client] = 0;
-    	g_cHudPositionCookie.Set(client, "0");
-    	
-    	gF_HudPositionX[client] = 0.01;
-    	gF_HudPositionY[client] = 0.16;
-    }
-    else
-    	gI_HudPosition[client] = StringToInt(buffer);
-    	
-    SetHudPosition(client);
+	if (IsFakeClient(client))
+		return;
+	
+	char buffer[8];
+	
+	// Load Landfix enabled cookie
+	g_cEnabledCookie.Get(client, buffer, sizeof(buffer));
+	gB_Enabled[client] = (buffer[0] != '\0' && StringToInt(buffer) == 1);
+	
+	if (buffer[0] == '\0')
+		g_cEnabledCookie.Set(client, "0");
+	
+	// Load HUD enabled cookie
+	g_cUseHudCookie.Get(client, buffer, sizeof(buffer));
+	gB_UseHud[client] = (buffer[0] != '\0' && StringToInt(buffer) == 1);
+	
+	if (buffer[0] == '\0')
+		g_cUseHudCookie.Set(client, "1");
+	
+	if (gB_UseHud[client] && gB_Enabled[client])
+	{
+		gI_HudTimerID[client]++;
+		iLastValidID[client] = gI_HudTimerID[client];        
+		g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
+	}
+	
+	// Load HUD position cookie
+	g_cHudPositionCookie.Get(client, buffer, sizeof(buffer));
+	
+	if (buffer[0] == '\0')
+	{
+		gI_HudPosition[client] = 0;
+		g_cHudPositionCookie.Set(client, "0");
+		
+		gF_HudPositionX[client] = 0.01;
+		gF_HudPositionY[client] = 0.16;
+	}
+	else
+		gI_HudPosition[client] = StringToInt(buffer);
+		
+	SetHudPosition(client);
 }
 
 public void OnClientPutInServer(int client)
 {
-    SDKHook(client, SDKHook_GroundEntChangedPost, OnGroundChange);
-    
-    // Force Landfix Type to use Haze's on connect
-    gB_LandfixType[client] = true;
-    
-    gI_Jump[client] = 0;
-
-    // Load player cookies
-    OnClientCookiesCached(client);
+	SDKHook(client, SDKHook_GroundEntChangedPost, OnGroundChange);
+	
+	// Force Landfix Type to use Haze's on connect
+	gB_LandfixType[client] = true;
+	
+	gI_Jump[client] = 0;
+	
+	// Load player cookies
+	OnClientCookiesCached(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-    if (g_hudTimers[client] != null)
-    {
-        KillTimer(g_hudTimers[client]);
-        g_hudTimers[client] = null;
-    }
+	if (g_hudTimers[client] != null)
+	{
+	    KillTimer(g_hudTimers[client]);
+	    g_hudTimers[client] = null;
+	}
 }
 
 public Action OnPlayerRunCmd(int client, int &buttons)
@@ -274,8 +274,8 @@ public Action Command_LandFixHudPos(int client, int args)
 	}
 	
 	char arg[2];
-    GetCmdArg(1, arg, sizeof(arg));
-    int hudPosition = StringToInt(arg);
+	GetCmdArg(1, arg, sizeof(arg));
+	int hudPosition = StringToInt(arg);
 	
 	if (hudPosition < 0 || hudPosition > 2)
 	{
@@ -321,60 +321,60 @@ void SetHudPosition(int client)
 
 public Action Command_LandFix(int client, int args) 
 {
-    if (client == 0)
-        return Plugin_Handled;
-
-    gB_Enabled[client] = !gB_Enabled[client];
-    Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "On" : "Off");
-    
-    // Save the new Landfix enabled state in the cookie
-    char buffer[2];
-    Format(buffer, sizeof(buffer), "%d", gB_Enabled[client]);
-    g_cEnabledCookie.Set(client, buffer);
-
-    if (gB_Enabled[client])
-    {
-        if (g_hudTimers[client] != null)
-        {
-            KillTimer(g_hudTimers[client]);
-            g_hudTimers[client] = null;
-        }
+	if (client == 0)
+		return Plugin_Handled;
 	
+	gB_Enabled[client] = !gB_Enabled[client];
+	Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "On" : "Off");
+	
+	// Save the new Landfix enabled state in the cookie
+	char buffer[2];
+	Format(buffer, sizeof(buffer), "%d", gB_Enabled[client]);
+	g_cEnabledCookie.Set(client, buffer);
+	
+	if (gB_Enabled[client])
+	{
+		if (g_hudTimers[client] != null)
+		{
+			KillTimer(g_hudTimers[client]);
+			g_hudTimers[client] = null;
+		}
+		
 		if (gB_UseHud[client])
 		{
 			gI_HudTimerID[client]++;
-	        iLastValidID[client] = gI_HudTimerID[client];        
-	        g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
+			iLastValidID[client] = gI_HudTimerID[client];        
+			g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
 		}
-    }
-    else 
-    {
-        // Stop the HUD timer when disabling LandFix - if HUD is On
-        if (gB_UseHud[client])
-        {
-        	if (g_hudTimers[client] != null)
-        	{
-	            KillTimer(g_hudTimers[client]);
-	            g_hudTimers[client] = null;
-        	}
-        }
-    }
-
-    return Plugin_Handled;
+	}
+	else 
+	{
+		// Stop the HUD timer when disabling LandFix - if HUD is On
+		if (gB_UseHud[client])
+		{
+			if (g_hudTimers[client] != null)
+			{
+				KillTimer(g_hudTimers[client]);
+				g_hudTimers[client] = null;
+			}
+		}
+	}
+	
+	return Plugin_Handled;
 }
 
 public Action Timer_ShowHudText(Handle timer, any client) 
 {
-    if (!IsClientInGame(client) || !gB_Enabled[client] || !gB_UseHud[client]) 
-        return Plugin_Stop;
-
-    if (gI_HudTimerID[client] != iLastValidID[client])
-        return Plugin_Stop;
-
-    SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], gF_HudTimerDuration, 255, 255, 255, 255, 0.0, 0.0, 0);
-    ShowHudText(client, -1, "Landfix: On");
-
-    return Plugin_Continue;
+	if (!IsClientInGame(client) || !gB_Enabled[client] || !gB_UseHud[client]) 
+		return Plugin_Stop;
+	
+	if (gI_HudTimerID[client] != iLastValidID[client])
+		return Plugin_Stop;
+	
+	SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], gF_HudTimerDuration, 255, 255, 255, 255, 0.0, 0.0, 0);
+	ShowHudText(client, -1, "Landfix: On");
+	
+	return Plugin_Continue;
 }
 
 //Thanks MARU for the idea/http://steamcommunity.com/profiles/76561197970936804
