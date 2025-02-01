@@ -314,7 +314,7 @@ public int LandFixMenu_Callback(Menu menu, MenuAction action, int client, int op
 void ShowLandFixHudPosMenu(int client)
 {
 	Menu menu = CreateMenu(LandFixHudPosMenu_Callback);
-	SetMenuTitle(menu, "Select HUD Position");
+	SetMenuTitle(menu, "Landfix HUD Position");
 	AddMenuItem(menu, "0", "Top Left");
 	AddMenuItem(menu, "1", "Top Right");
 	AddMenuItem(menu, "2", "Top Center");
@@ -357,7 +357,7 @@ public int LandFixHudPosMenu_Callback(Menu menu, MenuAction action, int client, 
 void ShowLandFixHudColorMenu(int client)
 {
 	Menu menu = CreateMenu(LandFixHudColorMenu_Callback);
-	SetMenuTitle(menu, "Select HUD Color");
+	SetMenuTitle(menu, "Landfix HUD Color");
 	AddMenuItem(menu, "0", "White (Default)");
 	AddMenuItem(menu, "1", "Cyan");
 	AddMenuItem(menu, "2", "Purple");
