@@ -20,6 +20,7 @@ public Plugin myinfo =
 int gI_TicksOnGround[MAXPLAYERS + 1];
 int gI_Jump[MAXPLAYERS + 1];
 int gI_HudPosition[MAXPLAYERS + 1];
+int gI_HudColor[MAXPLAYERS + 1];
 float gF_HudPositionX[MAXPLAYERS + 1];
 float gF_HudPositionY[MAXPLAYERS + 1];
 float gF_HudTimerDuration = 0.5;
@@ -35,6 +36,16 @@ new Handle:g_hudTimers[MAXPLAYERS + 1] = { null };
 Cookie g_cEnabledCookie;
 Cookie g_cUseHudCookie;
 Cookie g_cHudPositionCookie;
+Cookie g_cHudColorCookie;
+
+int g_iColorRGB[6][4] = {
+	{255,255,255,255}, // 0: Default (White)
+	{0,255,255,255},   // 1: Cyan
+	{0,255,0,255},	 // 2: Green
+	{255,0,0,255},	 // 3: Red
+	{0,0,255,255},	 // 4: Blue
+	{128,0,128,255}   // 5: Purple
+};
 
 public void OnPluginStart()
 {
@@ -57,12 +68,21 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_lfhudpos", Command_LandFixHudPos, "LandfixHudPos");
 	RegConsoleCmd("sm_lfhudposition", Command_LandFixHudPos, "LandfixHudPos");
 	
+	// Change HUD Color
+	RegConsoleCmd("sm_lfc", Command_LandFixHudColor, "LandfixHUDColor");
+	RegConsoleCmd("sm_lfcolor", Command_LandFixHudColor, "LandfixHUDColor");
+	
+	// Landfix Menu
+	RegConsoleCmd("sm_lfmenu", Command_LandFixMenu, "LandfixMenu");
+	RegConsoleCmd("sm_lfm", Command_LandFixMenu, "LandfixMenu");
+	
 	HookEvent("player_jump", PlayerJump);
 	
 	// Cookies
 	g_cEnabledCookie = new Cookie("landfix_enabled", "Landfix enabled state", CookieAccess_Protected);
 	g_cUseHudCookie = new Cookie("landfix_hud", "Landfix HUD enabled state", CookieAccess_Protected);
 	g_cHudPositionCookie = new Cookie("landfix_hud_position", "Landfix HUD position state", CookieAccess_Protected);
+	g_cHudColorCookie = new Cookie("landfix_hud_color", "Landfix HUD Color", CookieAccess_Protected);
 	
 	for(int client = 1; client <= MaxClients; client++)
 	{
@@ -120,6 +140,19 @@ public void OnClientCookiesCached(int client)
 	else
 		gI_HudPosition[client] = StringToInt(buffer);
 		
+	// Load HUD color cookie
+	char colorBuffer[6];
+	g_cHudColorCookie.Get(client, colorBuffer, sizeof(colorBuffer));
+	if(colorBuffer[0] == '\0')
+	{
+		gI_HudColor[client] = 0;
+		g_cHudColorCookie.Set(client, "0");
+	}
+	else
+	{
+		gI_HudColor[client] = StringToInt(colorBuffer);
+	}
+	
 	SetHudPosition(client);
 }
 
@@ -211,6 +244,149 @@ public void OnGroundChange(int client)
 	}
 }
 
+public Action Command_LandFixMenu(int client, int args)
+{
+	if(client == 0)
+		return Plugin_Handled;
+	
+	ShowLandFixMenu(client);
+	return Plugin_Handled;
+}
+
+void ShowLandFixMenu(int client)
+{
+	Menu menu = CreateMenu(LandFixMenu_Callback);
+	SetMenuTitle(menu, "Landfix Menu");
+	AddMenuItem(menu, "toggle", (gB_Enabled[client]) ? "Disable Landfix" : "Enable Landfix");
+	AddMenuItem(menu, "hud", (gB_UseHud[client]) ? "Disable HUD" : "Enable HUD");
+	AddMenuItem(menu, "hudpos", "Set HUD Position");
+	AddMenuItem(menu, "hudcolor", "Set HUD Color");
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+}
+
+public int LandFixMenu_Callback(Menu menu, MenuAction action, int client, int option)
+{
+	if(action == MenuAction_Select)
+	{
+		char info[32];
+		GetMenuItem(menu, option, info, sizeof(info));
+		
+		if(StrEqual(info, "toggle"))
+		{
+			Command_LandFix(client, 0);
+		}
+		else if(StrEqual(info, "hud"))
+		{
+			Command_LandFixHud(client, 0);
+		}
+		else if(StrEqual(info, "hudpos"))
+		{
+			ShowLandFixHudPosMenu(client);
+			delete menu;
+			return 0;
+		}
+		else if(StrEqual(info, "hudcolor"))
+		{
+			ShowLandFixHudColorMenu(client);
+			delete menu;
+			return 0;
+		}
+		
+		ShowLandFixMenu(client);
+	}
+	else if(action == MenuAction_End)
+	{
+		delete menu;
+	}
+	return 0;
+}
+
+void ShowLandFixHudPosMenu(int client)
+{
+	Menu menu = CreateMenu(LandFixHudPosMenu_Callback);
+	SetMenuTitle(menu, "Select HUD Position");
+	AddMenuItem(menu, "0", "Top Left");
+	AddMenuItem(menu, "1", "Top Right");
+	AddMenuItem(menu, "2", "Top Center");
+	AddMenuItem(menu, "back", "Back");
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+}
+
+public int LandFixHudPosMenu_Callback(Menu menu, MenuAction action, int client, int option)
+{
+	if(action == MenuAction_Select)
+	{
+		char info[32];
+		GetMenuItem(menu, option, info, sizeof(info));
+		
+		if(StrEqual(info, "back"))
+		{
+			ShowLandFixMenu(client);
+			delete menu;
+			return 0;
+		}
+		
+		int hudPos = StringToInt(info);
+		gI_HudPosition[client] = hudPos;
+		SetHudPosition(client);
+		
+		char buffer[2];
+		Format(buffer, sizeof(buffer), "%d", gI_HudPosition[client]);
+		g_cHudPositionCookie.Set(client, buffer);
+		Shavit_PrintToChat(client, "Landfix HUD position set to: %d", hudPos);
+		
+		ShowLandFixHudPosMenu(client);
+	}
+	else if(action == MenuAction_End)
+	{
+		delete menu;
+	}
+	return 0;
+}
+
+void ShowLandFixHudColorMenu(int client)
+{
+	Menu menu = CreateMenu(LandFixHudColorMenu_Callback);
+	SetMenuTitle(menu, "Select HUD Color");
+	AddMenuItem(menu, "0", "Default (White)");
+	AddMenuItem(menu, "1", "Cyan");
+	AddMenuItem(menu, "2", "Green");
+	AddMenuItem(menu, "3", "Red");
+	AddMenuItem(menu, "4", "Blue");
+	AddMenuItem(menu, "5", "Purple");
+	AddMenuItem(menu, "back", "Back");
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+}
+
+public int LandFixHudColorMenu_Callback(Menu menu, MenuAction action, int client, int option)
+{
+	if(action == MenuAction_Select)
+	{
+		char info[32];
+		GetMenuItem(menu, option, info, sizeof(info));
+		
+		if(StrEqual(info, "back"))
+		{
+			ShowLandFixMenu(client);
+			delete menu;
+			return 0;
+		}
+		
+		int colorIndex = StringToInt(info);
+		gI_HudColor[client] = colorIndex;
+		char buffer[6];
+		Format(buffer, sizeof(buffer), "%d", colorIndex);
+		g_cHudColorCookie.Set(client, buffer);
+		Shavit_PrintToChat(client, "Landfix HUD color set to: %d", colorIndex);
+		ShowLandFixHudColorMenu(client);
+	}
+	else if(action == MenuAction_End)
+	{
+		delete menu;
+	}
+	return 0;
+}
+
 // Deprecated LandFixType Command:
 public Action Command_LandFixType(int client, int args) 
 {
@@ -297,6 +473,36 @@ public Action Command_LandFixHudPos(int client, int args)
 	return Plugin_Handled;
 }
 
+public Action Command_LandFixHudColor(int client, int args)
+{
+	if (client == 0)
+		return Plugin_Handled;
+	
+	if (args < 1)
+	{
+		Shavit_PrintToChat(client, "Choose a color from 0 to 5, example: /lfcolor 1");
+		Shavit_PrintToChat(client, "Current Landfix Hud color: %d", gI_HudColor[client]);
+		return Plugin_Handled;
+	}
+	
+	char arg[8];
+	GetCmdArg(1, arg, sizeof(arg));
+	int color = StringToInt(arg);
+	if (color < 0 || color >= 6)
+	{
+		Shavit_PrintToChat(client, "Choose a color from 0 to 5, example: /lfcolor 1");
+		Shavit_PrintToChat(client, "Current Landfix Hud color: %d", gI_HudColor[client]);
+		return Plugin_Handled;
+	}
+	
+	gI_HudColor[client] = color;
+	char buffer[8];
+	Format(buffer, sizeof(buffer), "%d", color);
+	g_cHudColorCookie.Set(client, buffer);
+	Shavit_PrintToChat(client, "Landfix HUD color set to: %d", color);
+	return Plugin_Handled;
+}
+
 void SetHudPosition(int client)
 {
 	// Top Left
@@ -371,7 +577,12 @@ public Action Timer_ShowHudText(Handle timer, any client)
 	if (gI_HudTimerID[client] != iLastValidID[client])
 		return Plugin_Stop;
 	
-	SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], gF_HudTimerDuration, 255, 255, 255, 255, 0.0, 0.0, 0);
+	SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], gF_HudTimerDuration,
+		g_iColorRGB[gI_HudColor[client]][0],
+		g_iColorRGB[gI_HudColor[client]][1],
+		g_iColorRGB[gI_HudColor[client]][2],
+		g_iColorRGB[gI_HudColor[client]][3],
+		0.0, 0.0, 0);
 	ShowHudText(client, -1, "Landfix: On");
 	
 	return Plugin_Continue;
