@@ -8,7 +8,7 @@ Special thanks to lukah for making the hud color system and menus.
 ## Commands    
 /lf - Enable Landfix    
 /lfhud - Enable Landfix Hud    
-/lfhudpos <number> - Change Hud Position (0-2)
+/lfhudpos <number> - Change Hud Position (0-2)    
 /lfhudcolor <number> - Change Hud Color (0-5)    
 /lfmenu - Open Landfix Menu    
 
