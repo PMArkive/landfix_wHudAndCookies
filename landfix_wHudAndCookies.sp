@@ -8,10 +8,10 @@
 public Plugin myinfo = 
 {
 	name = "LandFix",
-	author = "Haze, nimmy, ta de hack ctz",
+	author = "Haze, nimmy, ta de hack ctz, lukah",
 	description = "Modified Landfix plugin that saves players settings and has a toggleable HUD.",
 	version = "1.1",
-	url = ""
+	url = "https://github.com/tadehack/landfix_wHudAndCookies"
 }
 
 #define CHERRY 0
@@ -39,12 +39,12 @@ Cookie g_cHudPositionCookie;
 Cookie g_cHudColorCookie;
 
 int g_iColorRGB[6][4] = {
-	{255,255,255,255}, // 0: Default (White)
-	{0,255,255,255},   // 1: Cyan
-	{0,255,0,255},	 // 2: Green
-	{255,0,0,255},	 // 3: Red
-	{0,0,255,255},	 // 4: Blue
-	{128,0,128,255}   // 5: Purple
+	{255,255,255,255},	// 0: White (Default)
+	{0,255,255,255},	// 1: Cyan
+	{255,0,255,255},	// 2: Purple
+	{255,255,0,255},	// 3: Yellow
+	{0,255,0,255},		// 4: Green
+	{255,0,0,255}		// 5: Red
 };
 
 public void OnPluginStart()
@@ -71,10 +71,16 @@ public void OnPluginStart()
 	// Change HUD Color
 	RegConsoleCmd("sm_lfc", Command_LandFixHudColor, "LandfixHUDColor");
 	RegConsoleCmd("sm_lfcolor", Command_LandFixHudColor, "LandfixHUDColor");
+	RegConsoleCmd("sm_lfhc", Command_LandFixHudColor, "LandfixHUDColor");
+	RegConsoleCmd("sm_lfhudcolor", Command_LandFixHudColor, "LandfixHUDColor");
 	
 	// Landfix Menu
+	RegConsoleCmd("sm_landfixmenu", Command_LandFixMenu, "LandfixMenu");
 	RegConsoleCmd("sm_lfmenu", Command_LandFixMenu, "LandfixMenu");
 	RegConsoleCmd("sm_lfm", Command_LandFixMenu, "LandfixMenu");
+	RegConsoleCmd("sm_landfixsettings", Command_LandFixMenu, "LandfixMenu");
+	RegConsoleCmd("sm_lfsettings", Command_LandFixMenu, "LandfixMenu");
+	RegConsoleCmd("sm_lfoptions", Command_LandFixMenu, "LandfixMenu");
 	
 	HookEvent("player_jump", PlayerJump);
 	
@@ -206,6 +212,8 @@ public Action OnPlayerRunCmd(int client, int &buttons)
 	return Plugin_Continue;
 }
 
+// LandFix Stuff -----
+
 public PlayerJump(Handle event, const char[] name, bool dontBroadcast)
 {
 	int userid = GetEventInt(event, "userid");
@@ -244,6 +252,8 @@ public void OnGroundChange(int client)
 	}
 }
 
+// Menus -----
+
 public Action Command_LandFixMenu(int client, int args)
 {
 	if(client == 0)
@@ -257,10 +267,10 @@ void ShowLandFixMenu(int client)
 {
 	Menu menu = CreateMenu(LandFixMenu_Callback);
 	SetMenuTitle(menu, "Landfix Menu");
-	AddMenuItem(menu, "toggle", (gB_Enabled[client]) ? "Disable Landfix" : "Enable Landfix");
-	AddMenuItem(menu, "hud", (gB_UseHud[client]) ? "Disable HUD" : "Enable HUD");
-	AddMenuItem(menu, "hudpos", "Set HUD Position");
-	AddMenuItem(menu, "hudcolor", "Set HUD Color");
+	AddMenuItem(menu, "toggle", (gB_Enabled[client]) ? "Landfix: On" : "Landfix: Off");
+	AddMenuItem(menu, "hud", (gB_UseHud[client]) ? "HUD: On" : "HUD: Off");
+	AddMenuItem(menu, "hudpos", "HUD Position");
+	AddMenuItem(menu, "hudcolor", "HUD Color");
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
@@ -348,12 +358,12 @@ void ShowLandFixHudColorMenu(int client)
 {
 	Menu menu = CreateMenu(LandFixHudColorMenu_Callback);
 	SetMenuTitle(menu, "Select HUD Color");
-	AddMenuItem(menu, "0", "Default (White)");
+	AddMenuItem(menu, "0", "White (Default)");
 	AddMenuItem(menu, "1", "Cyan");
-	AddMenuItem(menu, "2", "Green");
-	AddMenuItem(menu, "3", "Red");
-	AddMenuItem(menu, "4", "Blue");
-	AddMenuItem(menu, "5", "Purple");
+	AddMenuItem(menu, "2", "Purple");
+	AddMenuItem(menu, "3", "Yellow");
+	AddMenuItem(menu, "4", "Green");
+	AddMenuItem(menu, "5", "Red");
 	AddMenuItem(menu, "back", "Back");
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
@@ -386,6 +396,8 @@ public int LandFixHudColorMenu_Callback(Menu menu, MenuAction action, int client
 	}
 	return 0;
 }
+
+// Commands -----
 
 // Deprecated LandFixType Command:
 public Action Command_LandFixType(int client, int args) 
@@ -442,6 +454,9 @@ public Action Command_LandFixHud(int client, int args)
 
 public Action Command_LandFixHudPos(int client, int args)
 {
+	if (client == 0)
+		return Plugin_Handled;
+	
 	if (args < 1)
 	{
 		Shavit_PrintToChat(client, "Choose a position from 0 to 2, example: /lfhudpos 1");
@@ -480,7 +495,7 @@ public Action Command_LandFixHudColor(int client, int args)
 	
 	if (args < 1)
 	{
-		Shavit_PrintToChat(client, "Choose a color from 0 to 5, example: /lfcolor 1");
+		Shavit_PrintToChat(client, "Choose a color from 0 to 5, example: /lfhudcolor 1");
 		Shavit_PrintToChat(client, "Current Landfix Hud color: %d", gI_HudColor[client]);
 		return Plugin_Handled;
 	}
@@ -490,7 +505,7 @@ public Action Command_LandFixHudColor(int client, int args)
 	int color = StringToInt(arg);
 	if (color < 0 || color >= 6)
 	{
-		Shavit_PrintToChat(client, "Choose a color from 0 to 5, example: /lfcolor 1");
+		Shavit_PrintToChat(client, "Choose a color from 0 to 5, example: /lfhudcolor 1");
 		Shavit_PrintToChat(client, "Current Landfix Hud color: %d", gI_HudColor[client]);
 		return Plugin_Handled;
 	}
@@ -587,6 +602,8 @@ public Action Timer_ShowHudText(Handle timer, any client)
 	
 	return Plugin_Continue;
 }
+
+// More LandFix Stuff -----
 
 //Thanks MARU for the idea/http://steamcommunity.com/profiles/76561197970936804
 float GetGroundUnits(int client)
