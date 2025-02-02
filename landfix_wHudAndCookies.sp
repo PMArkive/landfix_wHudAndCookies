@@ -134,17 +134,9 @@ public void OnClientCookiesCached(int client)
 	{
 	    gB_UseHud[client] = (StringToInt(buffer) == 1);
 	}
-	
-	if (gB_UseHud[client] && gB_Enabled[client])
-	{
-		gI_HudTimerID[client]++;
-		iLastValidID[client] = gI_HudTimerID[client];        
-		g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
-	}
-	
+
 	// Load HUD position cookie
 	g_cHudPositionCookie.Get(client, buffer, sizeof(buffer));
-	
 	if (buffer[0] == '\0')
 	{
 		gI_HudPosition[client] = 0;
@@ -172,6 +164,14 @@ public void OnClientCookiesCached(int client)
 	}
 	
 	SetHudPosition(client);
+	
+	// Activate hud if Landfix + hud is enabled
+	if (gB_UseHud[client] && gB_Enabled[client])
+	{
+		gI_HudTimerID[client]++;
+		iLastValidID[client] = gI_HudTimerID[client];        
+		g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
+	}
 }
 
 public void OnClientPutInServer(int client)
@@ -278,7 +278,7 @@ public Action Command_LandFixMenu(int client, int args)
 void ShowLandFixMenu(int client)
 {
 	Menu menu = CreateMenu(LandFixMenu_Callback);
-	SetMenuTitle(menu, "Landfix Menu");
+	SetMenuTitle(menu, "Landfix Menu\n \n");
 	AddMenuItem(menu, "toggle", (gB_Enabled[client]) ? "Landfix: On" : "Landfix: Off");
 	AddMenuItem(menu, "hud", (gB_UseHud[client]) ? "HUD: On" : "HUD: Off");
 	AddMenuItem(menu, "hudpos", "HUD Position");
@@ -326,10 +326,10 @@ public int LandFixMenu_Callback(Menu menu, MenuAction action, int client, int op
 void ShowLandFixHudPosMenu(int client)
 {
 	Menu menu = CreateMenu(LandFixHudPosMenu_Callback);
-	SetMenuTitle(menu, "Landfix HUD Position");
+	SetMenuTitle(menu, "Landfix HUD Position\n \n");
 	AddMenuItem(menu, "0", "Top Left");
 	AddMenuItem(menu, "1", "Top Right");
-	AddMenuItem(menu, "2", "Top Center");
+	AddMenuItem(menu, "2\n \n", "Top Center\n \n");
 	AddMenuItem(menu, "back", "Back");
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
@@ -369,13 +369,13 @@ public int LandFixHudPosMenu_Callback(Menu menu, MenuAction action, int client, 
 void ShowLandFixHudColorMenu(int client)
 {
 	Menu menu = CreateMenu(LandFixHudColorMenu_Callback);
-	SetMenuTitle(menu, "Landfix HUD Color");
+	SetMenuTitle(menu, "Landfix HUD Color\n \n");
 	AddMenuItem(menu, "0", "White (Default)");
 	AddMenuItem(menu, "1", "Cyan");
 	AddMenuItem(menu, "2", "Purple");
 	AddMenuItem(menu, "3", "Yellow");
 	AddMenuItem(menu, "4", "Green");
-	AddMenuItem(menu, "5", "Red");
+	AddMenuItem(menu, "5\n \n", "Red\n \n");
 	AddMenuItem(menu, "back", "Back");
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
