@@ -113,17 +113,27 @@ public void OnClientCookiesCached(int client)
 	
 	// Load Landfix enabled cookie
 	g_cEnabledCookie.Get(client, buffer, sizeof(buffer));
-	gB_Enabled[client] = (buffer[0] != '\0' && StringToInt(buffer) == 1);
-	
 	if (buffer[0] == '\0')
-		g_cEnabledCookie.Set(client, "0");
+	{
+	    gB_Enabled[client] = false;
+	    g_cEnabledCookie.Set(client, "0");
+	}
+	else
+	{
+	    gB_Enabled[client] = (StringToInt(buffer) == 1);
+	}
 	
 	// Load HUD enabled cookie
 	g_cUseHudCookie.Get(client, buffer, sizeof(buffer));
-	gB_UseHud[client] = (buffer[0] != '\0' && StringToInt(buffer) == 1);
-	
 	if (buffer[0] == '\0')
-		g_cUseHudCookie.Set(client, "1");
+	{
+	    gB_UseHud[client] = true;
+	    g_cUseHudCookie.Set(client, "1");
+	}
+	else
+	{
+	    gB_UseHud[client] = (StringToInt(buffer) == 1);
+	}
 	
 	if (gB_UseHud[client] && gB_Enabled[client])
 	{
@@ -144,8 +154,10 @@ public void OnClientCookiesCached(int client)
 		gF_HudPositionY[client] = 0.16;
 	}
 	else
+	{
 		gI_HudPosition[client] = StringToInt(buffer);
-		
+	}
+
 	// Load HUD color cookie
 	char colorBuffer[6];
 	g_cHudColorCookie.Get(client, colorBuffer, sizeof(colorBuffer));
