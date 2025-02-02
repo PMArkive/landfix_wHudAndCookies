@@ -488,6 +488,28 @@ public Action Command_LandFixHudPos(int client, int args)
 	return Plugin_Handled;
 }
 
+void SetHudPosition(int client)
+{
+	// Top Left
+	if (gI_HudPosition[client] == 0)
+	{
+		gF_HudPositionX[client] = 0.01;
+		gF_HudPositionY[client] = 0.16;
+	}
+	// Top Right
+	else if (gI_HudPosition[client] == 1)
+	{
+		gF_HudPositionX[client] = 0.895;
+		gF_HudPositionY[client] = 0.01;
+	}
+	// Top Center
+	else if (gI_HudPosition[client] == 2)
+	{
+		gF_HudPositionX[client] = 0.455;
+		gF_HudPositionY[client] = 0.01;
+	}
+}
+
 public Action Command_LandFixHudColor(int client, int args)
 {
 	if (client == 0)
@@ -516,28 +538,6 @@ public Action Command_LandFixHudColor(int client, int args)
 	g_cHudColorCookie.Set(client, buffer);
 	Shavit_PrintToChat(client, "Landfix HUD color set to: %d", color);
 	return Plugin_Handled;
-}
-
-void SetHudPosition(int client)
-{
-	// Top Left
-	if (gI_HudPosition[client] == 0)
-	{
-		gF_HudPositionX[client] = 0.01;
-		gF_HudPositionY[client] = 0.16;
-	}
-	// Top Right
-	else if (gI_HudPosition[client] == 1)
-	{
-		gF_HudPositionX[client] = 0.895;
-		gF_HudPositionY[client] = 0.01;
-	}
-	// Top Center
-	else if (gI_HudPosition[client] == 2)
-	{
-		gF_HudPositionX[client] = 0.453;
-		gF_HudPositionY[client] = 0.01;
-	}
 }
 
 public Action Command_LandFix(int client, int args) 
