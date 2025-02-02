@@ -584,6 +584,7 @@ public Action Command_LandFix(int client, int args)
 	return Plugin_Handled;
 }
 
+// Hud Timer
 public Action Timer_ShowHudText(Handle timer, any client) 
 {
 	if (!IsClientInGame(client) || !gB_Enabled[client] || !gB_UseHud[client]) 
