@@ -196,6 +196,8 @@ public void OnClientDisconnect(int client)
 	}
 }
 
+// LandFix Stuff -----
+
 public Action OnPlayerRunCmd(int client, int &buttons)
 {
 	if(!IsClientConnected(client) || !IsPlayerAlive(client) || IsFakeClient(client) || !gB_Enabled[client])
@@ -223,8 +225,6 @@ public Action OnPlayerRunCmd(int client, int &buttons)
 
 	return Plugin_Continue;
 }
-
-// LandFix Stuff -----
 
 public PlayerJump(Handle event, const char[] name, bool dontBroadcast)
 {
