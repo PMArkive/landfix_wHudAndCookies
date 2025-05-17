@@ -8,7 +8,7 @@
 public Plugin myinfo = 
 {
 	name = "LandFix",
-	author = "Haze, nimmy, ta de hack ctz, lukah",
+	author = "Haze, nimmy, shinoum, lukah",
 	description = "Modified Landfix plugin that saves players settings and has a toggleable HUD.",
 	version = "1.1",
 	url = "https://github.com/tadehack/landfix_wHudAndCookies"
@@ -64,6 +64,9 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_lhud", Command_LandFixHud, "LandfixHud");
 	
 	// Change HUD Position
+	RegConsoleCmd("sm_lfp", Command_LandFixHudPos, "LandfixHudPos");
+	RegConsoleCmd("sm_lfpos", Command_LandFixHudPos, "LandfixHudPos");
+	RegConsoleCmd("sm_landfixpos", Command_LandFixHudPos, "LandfixHudPos");
 	RegConsoleCmd("sm_lfhp", Command_LandFixHudPos, "LandfixHudPos");
 	RegConsoleCmd("sm_lfhudpos", Command_LandFixHudPos, "LandfixHudPos");
 	RegConsoleCmd("sm_lfhudposition", Command_LandFixHudPos, "LandfixHudPos");
@@ -139,11 +142,10 @@ public void OnClientCookiesCached(int client)
 	g_cHudPositionCookie.Get(client, buffer, sizeof(buffer));
 	if (buffer[0] == '\0')
 	{
-		gI_HudPosition[client] = 0;
-		g_cHudPositionCookie.Set(client, "0");
+		gI_HudPosition[client] = 1;
+		g_cHudPositionCookie.Set(client, "1");
 		
-		gF_HudPositionX[client] = 0.01;
-		gF_HudPositionY[client] = 0.16;
+		SetHudPosition(client);
 	}
 	else
 	{
@@ -196,8 +198,6 @@ public void OnClientDisconnect(int client)
 	}
 }
 
-// LandFix Stuff -----
-
 public Action OnPlayerRunCmd(int client, int &buttons)
 {
 	if(!IsClientConnected(client) || !IsPlayerAlive(client) || IsFakeClient(client) || !gB_Enabled[client])
@@ -225,6 +225,8 @@ public Action OnPlayerRunCmd(int client, int &buttons)
 
 	return Plugin_Continue;
 }
+
+// LandFix Stuff -----
 
 public PlayerJump(Handle event, const char[] name, bool dontBroadcast)
 {
