@@ -6,8 +6,8 @@ Special thanks to nora for implementing additional features and fixing some hand
 
 ## Commands    
 /lf - Enable/Disable Landfix    
-/lftype - Switch Landfix Type
-/lfhud - Enable/Disable Landfix Hud    
+/lftype - Switch Landfix Type    
+/lfhud - Enable/Disable Landfix Hud      
 /lfhudpos <number> - Change Hud Position (0-2) (Position 1 will not work if you're using "hud emo")        
 /lfhudcolor <number> - Change Hud Color (0-5)    
 /lfmenu - Open Landfix Menu    
