@@ -1,12 +1,12 @@
 # landfix_wHudAndCookies
-Modified Landfix plugin that saves players settings and has a cutomizable HUD.   
-Cherry's landfix has been deprecated as well, since it's not really reliable and unnecessary. Haze's landfix will be used instead.   
-If you still want to have /landfixtype just register the commands for Command_LandFixType and it'll work.   
+Modified Landfix plugin that saves players settings and has a cutomizable HUD.    
 
 Special thanks to lukah for making the hud color system and menus.   
+Special thanks to nora for implementing additional features and fixing some handle errors.   
 
 ## Commands    
 /lf - Enable/Disable Landfix    
+/lftype - Switch Landfix Type
 /lfhud - Enable/Disable Landfix Hud    
 /lfhudpos <number> - Change Hud Position (0-2) (Position 1 will not work if you're using "hud emo")        
 /lfhudcolor <number> - Change Hud Color (0-5)    
