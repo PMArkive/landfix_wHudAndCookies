@@ -10,7 +10,7 @@ public Plugin myinfo =
 	name = "LandFix",
 	author = "Haze, nimmy, shinoum, lukah, nora",
 	description = "Modified Landfix plugin that saves players settings and has a toggleable HUD.",
-	version = "1.2",
+	version = "1.2.1",
 	url = "https://github.com/tadehack/landfix_wHudAndCookies"
 }
 
@@ -23,9 +23,9 @@ int gI_HudPosition[MAXPLAYERS + 1];
 int gI_HudColor[MAXPLAYERS + 1];
 float gF_HudPositionX[MAXPLAYERS + 1];
 float gF_HudPositionY[MAXPLAYERS + 1];
-float gF_HudTimerDuration = 0.5;
+float gF_HudTimerDuration = 0.7;
 
-bool gB_LandfixType[MAXPLAYERS + 1] = {true, ...};
+bool gB_LandfixType[MAXPLAYERS + 1] = {true, ...}; // false = Cherry | true = Haze
 bool gB_Enabled[MAXPLAYERS+1] = {true, ...};
 bool gB_UseHud[MAXPLAYERS+1] = {true, ...};
 
@@ -648,7 +648,7 @@ public Action Timer_ShowHudText(Handle timer, any client)
 		g_iColorRGB[gI_HudColor[client]][1],
 		g_iColorRGB[gI_HudColor[client]][2],
 		g_iColorRGB[gI_HudColor[client]][3],
-		0, 0.0, 0.0, 0.0);
+		0.0, 0.0, 0);
 	ShowHudText(client, -1, hudText);
 	
 	return Plugin_Continue;
