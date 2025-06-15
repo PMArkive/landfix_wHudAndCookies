@@ -25,8 +25,8 @@ float gF_HudPositionX[MAXPLAYERS + 1];
 float gF_HudPositionY[MAXPLAYERS + 1];
 float gF_HudTimerDuration = 0.5;
 
-bool gB_LandfixType[MAXPLAYERS + 1];
-bool gB_Enabled[MAXPLAYERS+1] = {false, ...};
+bool gB_LandfixType[MAXPLAYERS + 1] = {true, ...};
+bool gB_Enabled[MAXPLAYERS+1] = {true, ...};
 bool gB_UseHud[MAXPLAYERS+1] = {true, ...};
 
 // Simplified timer management - remove timer ID system
@@ -79,6 +79,7 @@ public void OnPluginStart()
 	
 	// Landfix Menu
 	RegConsoleCmd("sm_landfixmenu", Command_LandFixMenu, "LandfixMenu");
+	RegConsoleCmd("sm_landmenu", Command_LandFixMenu, "LandfixMenu");
 	RegConsoleCmd("sm_lfmenu", Command_LandFixMenu, "LandfixMenu");
 	RegConsoleCmd("sm_lfm", Command_LandFixMenu, "LandfixMenu");
 	RegConsoleCmd("sm_landfixsettings", Command_LandFixMenu, "LandfixMenu");
@@ -124,8 +125,8 @@ public void OnClientCookiesCached(int client)
 	g_cEnabledCookie.Get(client, buffer, sizeof(buffer));
 	if (buffer[0] == '\0')
 	{
-	    gB_Enabled[client] = false;
-	    g_cEnabledCookie.Set(client, "0");
+	    gB_Enabled[client] = true;
+	    g_cEnabledCookie.Set(client, "1");
 	}
 	else
 	{
@@ -173,8 +174,8 @@ public void OnClientCookiesCached(int client)
     g_cLandfixTypeCookie.Get(client, buffer, sizeof(buffer));
     if (buffer[0] == '\0')
     {
-        gB_LandfixType[client] = true; // false = Cherry, true = Haze
-        g_cLandfixTypeCookie.Set(client, "0");
+        gB_LandfixType[client] = true; // false = Cherry | true = Haze
+        g_cLandfixTypeCookie.Set(client, "1");
     }
     else
     {
