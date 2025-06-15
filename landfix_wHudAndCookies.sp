@@ -8,9 +8,9 @@
 public Plugin myinfo = 
 {
 	name = "LandFix",
-	author = "Haze, nimmy, shinoum, lukah",
+	author = "Haze, nimmy, shinoum, lukah, nora",
 	description = "Modified Landfix plugin that saves players settings and has a toggleable HUD.",
-	version = "1.1",
+	version = "1.2",
 	url = "https://github.com/tadehack/landfix_wHudAndCookies"
 }
 
@@ -25,18 +25,18 @@ float gF_HudPositionX[MAXPLAYERS + 1];
 float gF_HudPositionY[MAXPLAYERS + 1];
 float gF_HudTimerDuration = 0.5;
 
-bool gB_LandfixType[MAXPLAYERS + 1] = {true, ...}; // initializing this as true will always start as HAZE lfType
+bool gB_LandfixType[MAXPLAYERS + 1];
 bool gB_Enabled[MAXPLAYERS+1] = {false, ...};
 bool gB_UseHud[MAXPLAYERS+1] = {true, ...};
 
-new gI_HudTimerID[MAXPLAYERS + 1];
-new iLastValidID[MAXPLAYERS + 1];
-new Handle:g_hudTimers[MAXPLAYERS + 1] = { null };
+// Simplified timer management - remove timer ID system
+Handle g_hudTimers[MAXPLAYERS + 1] = { null, ... };
 
 Cookie g_cEnabledCookie;
 Cookie g_cUseHudCookie;
 Cookie g_cHudPositionCookie;
 Cookie g_cHudColorCookie;
+Cookie g_cLandfixTypeCookie;
 
 int g_iColorRGB[6][4] = {
 	{255,255,255,255},	// 0: White (Default)
@@ -84,6 +84,11 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_landfixsettings", Command_LandFixMenu, "LandfixMenu");
 	RegConsoleCmd("sm_lfsettings", Command_LandFixMenu, "LandfixMenu");
 	RegConsoleCmd("sm_lfoptions", Command_LandFixMenu, "LandfixMenu");
+
+	// Landfix Type
+	RegConsoleCmd("sm_lft", Command_LandFixType, "LandfixType");
+	RegConsoleCmd("sm_lftype", Command_LandFixType, "LandfixType");
+	RegConsoleCmd("sm_landfixtype", Command_LandFixType, "LandfixType");
 	
 	HookEvent("player_jump", PlayerJump);
 	
@@ -92,6 +97,7 @@ public void OnPluginStart()
 	g_cUseHudCookie = new Cookie("landfix_hud", "Landfix HUD enabled state", CookieAccess_Protected);
 	g_cHudPositionCookie = new Cookie("landfix_hud_position", "Landfix HUD position state", CookieAccess_Protected);
 	g_cHudColorCookie = new Cookie("landfix_hud_color", "Landfix HUD Color", CookieAccess_Protected);
+	g_cLandfixTypeCookie = new Cookie("landfix_type", "Landfix type (Haze/Cherry)", CookieAccess_Protected);
 	
 	for(int client = 1; client <= MaxClients; client++)
 	{
@@ -144,8 +150,6 @@ public void OnClientCookiesCached(int client)
 	{
 		gI_HudPosition[client] = 1;
 		g_cHudPositionCookie.Set(client, "1");
-		
-		SetHudPosition(client);
 	}
 	else
 	{
@@ -164,38 +168,40 @@ public void OnClientCookiesCached(int client)
 	{
 		gI_HudColor[client] = StringToInt(colorBuffer);
 	}
+
+	// Load Landfix type cookie
+    g_cLandfixTypeCookie.Get(client, buffer, sizeof(buffer));
+    if (buffer[0] == '\0')
+    {
+        gB_LandfixType[client] = true; // false = Cherry, true = Haze
+        g_cLandfixTypeCookie.Set(client, "0");
+    }
+    else
+    {
+        gB_LandfixType[client] = (StringToInt(buffer) == 1);
+    }
 	
+	// Set HUD position and start timer if needed
 	SetHudPosition(client);
-	
-	// Activate hud if Landfix + hud is enabled
-	if (gB_UseHud[client] && gB_Enabled[client])
-	{
-		gI_HudTimerID[client]++;
-		iLastValidID[client] = gI_HudTimerID[client];        
-		g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
-	}
+	StartHudTimer(client);
 }
 
 public void OnClientPutInServer(int client)
 {
-	SDKHook(client, SDKHook_GroundEntChangedPost, OnGroundChange);
+    SDKHook(client, SDKHook_GroundEntChangedPost, OnGroundChange);
 	
-	// Force Landfix Type to use Haze's on connect
-	gB_LandfixType[client] = true;
-	
-	gI_Jump[client] = 0;
-	
-	// Load player cookies
-	OnClientCookiesCached(client);
+    gI_Jump[client] = 0;
+    
+    // Initialize timer handle
+    g_hudTimers[client] = null;
+    
+    // Load player cookies
+    OnClientCookiesCached(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-	if (g_hudTimers[client] != null)
-	{
-		KillTimer(g_hudTimers[client]);
-		g_hudTimers[client] = null;
-	}
+	StopHudTimer(client);
 }
 
 public Action OnPlayerRunCmd(int client, int &buttons)
@@ -279,9 +285,13 @@ public Action Command_LandFixMenu(int client, int args)
 
 void ShowLandFixMenu(int client)
 {
+	char typeText[64];
+	Format(typeText, sizeof(typeText), "%s\n \n", gB_LandfixType[client] ? "Type: Haze" : "Type: Cherry");
+	
 	Menu menu = CreateMenu(LandFixMenu_Callback);
 	SetMenuTitle(menu, "Landfix Menu\n \n");
 	AddMenuItem(menu, "toggle", (gB_Enabled[client]) ? "Landfix: On" : "Landfix: Off");
+	AddMenuItem(menu, "type", typeText);
 	AddMenuItem(menu, "hud", (gB_UseHud[client]) ? "HUD: On" : "HUD: Off");
 	AddMenuItem(menu, "hudpos", "HUD Position");
 	AddMenuItem(menu, "hudcolor", "HUD Color");
@@ -298,25 +308,26 @@ public int LandFixMenu_Callback(Menu menu, MenuAction action, int client, int op
 		if(StrEqual(info, "toggle"))
 		{
 			Command_LandFix(client, 0);
+			ShowLandFixMenu(client);
+		}
+		else if(StrEqual(info, "type"))
+		{
+			Command_LandFixType(client, 0);
+			ShowLandFixMenu(client);
 		}
 		else if(StrEqual(info, "hud"))
 		{
 			Command_LandFixHud(client, 0);
+			ShowLandFixMenu(client);
 		}
 		else if(StrEqual(info, "hudpos"))
 		{
 			ShowLandFixHudPosMenu(client);
-			delete menu;
-			return 0;
 		}
 		else if(StrEqual(info, "hudcolor"))
 		{
 			ShowLandFixHudColorMenu(client);
-			delete menu;
-			return 0;
 		}
-		
-		ShowLandFixMenu(client);
 	}
 	else if(action == MenuAction_End)
 	{
@@ -346,20 +357,23 @@ public int LandFixHudPosMenu_Callback(Menu menu, MenuAction action, int client, 
 		if(StrEqual(info, "back"))
 		{
 			ShowLandFixMenu(client);
-			delete menu;
-			return 0;
 		}
-		
-		int hudPos = StringToInt(info);
-		gI_HudPosition[client] = hudPos;
-		SetHudPosition(client);
-		
-		char buffer[2];
-		Format(buffer, sizeof(buffer), "%d", gI_HudPosition[client]);
-		g_cHudPositionCookie.Set(client, buffer);
-		Shavit_PrintToChat(client, "Landfix HUD position set to: %d", hudPos);
-		
-		ShowLandFixHudPosMenu(client);
+		else
+		{
+			int hudPos = StringToInt(info);
+			gI_HudPosition[client] = hudPos;
+			SetHudPosition(client);
+			
+			char buffer[2];
+			Format(buffer, sizeof(buffer), "%d", gI_HudPosition[client]);
+			g_cHudPositionCookie.Set(client, buffer);
+			
+			// Refresh HUD display with new position
+			RefreshHudDisplay(client);
+			
+			Shavit_PrintToChat(client, "Landfix HUD position set to: %d", hudPos);
+			ShowLandFixHudPosMenu(client);
+		}
 	}
 	else if(action == MenuAction_End)
 	{
@@ -392,17 +406,21 @@ public int LandFixHudColorMenu_Callback(Menu menu, MenuAction action, int client
 		if(StrEqual(info, "back"))
 		{
 			ShowLandFixMenu(client);
-			delete menu;
-			return 0;
 		}
-		
-		int colorIndex = StringToInt(info);
-		gI_HudColor[client] = colorIndex;
-		char buffer[6];
-		Format(buffer, sizeof(buffer), "%d", colorIndex);
-		g_cHudColorCookie.Set(client, buffer);
-		Shavit_PrintToChat(client, "Landfix HUD color set to: %d", colorIndex);
-		ShowLandFixHudColorMenu(client);
+		else
+		{
+			int colorIndex = StringToInt(info);
+			gI_HudColor[client] = colorIndex;
+			char buffer[6];
+			Format(buffer, sizeof(buffer), "%d", colorIndex);
+			g_cHudColorCookie.Set(client, buffer);
+			
+			// Refresh HUD display with new color
+			RefreshHudDisplay(client);
+			
+			Shavit_PrintToChat(client, "Landfix HUD color set to: %d", colorIndex);
+			ShowLandFixHudColorMenu(client);
+		}
 	}
 	else if(action == MenuAction_End)
 	{
@@ -413,17 +431,25 @@ public int LandFixHudColorMenu_Callback(Menu menu, MenuAction action, int client
 
 // Commands -----
 
-// Deprecated LandFixType Command:
 public Action Command_LandFixType(int client, int args) 
 {
-	if(client == 0)
-	{
-		return Plugin_Handled;
-	}
+    if(client == 0)
+    {
+        return Plugin_Handled;
+    }
 
-	gB_LandfixType[client] = !gB_LandfixType[client];
-	Shavit_PrintToChat(client, "Landfix Type: %s.", gB_LandfixType[client] ? "Haze" : "Cherry");
-	return Plugin_Handled;
+    gB_LandfixType[client] = !gB_LandfixType[client];
+    
+    // Save the landfix type preference to cookie
+    char buffer[2];
+    Format(buffer, sizeof(buffer), "%d", gB_LandfixType[client]);
+    g_cLandfixTypeCookie.Set(client, buffer);
+    
+    SetHudPosition(client);
+    RefreshHudDisplay(client);
+    
+    Shavit_PrintToChat(client, "Landfix Type: %s", gB_LandfixType[client] ? "Haze" : "Cherry");
+    return Plugin_Handled;
 }
 
 public Action Command_LandFixHud(int client, int args) 
@@ -439,28 +465,14 @@ public Action Command_LandFixHud(int client, int args)
 	Format(buffer, sizeof(buffer), "%d", gB_UseHud[client]);
 	g_cUseHudCookie.Set(client, buffer);
 	
-	if (!gB_UseHud[client] && gB_Enabled[client])
+	// Use centralized HUD management
+	if (gB_UseHud[client])
 	{
-		if (g_hudTimers[client] != null)
-		{
-			KillTimer(g_hudTimers[client]);
-			g_hudTimers[client] = null;
-		}
-		
-		SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], 0.0, 0, 0, 0, 0, 0.0, 0.0, 0);
-		ShowHudText(client, -1, " ");
+		StartHudTimer(client);
 	}
-	else if (gB_UseHud[client] && gB_Enabled[client])
+	else
 	{
-		if (g_hudTimers[client] != null)
-		{
-			KillTimer(g_hudTimers[client]);
-			g_hudTimers[client] = null;
-		}
-		
-		gI_HudTimerID[client]++;
-		iLastValidID[client] = gI_HudTimerID[client];        
-		g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
+		StopHudTimer(client);
 	}
 	
 	return Plugin_Handled;
@@ -496,32 +508,50 @@ public Action Command_LandFixHudPos(int client, int args)
 	Format(buffer, sizeof(buffer), "%d", gI_HudPosition[client]);
 	g_cHudPositionCookie.Set(client, buffer);
 
+	// Refresh HUD display with new position
+	RefreshHudDisplay(client);
+
 	Shavit_PrintToChat(client, "Landfix Hud position set to: %d", hudPosition);
-	//Shavit_PrintToChat(client, "Exact Landfix Hud Position: X: %.3f | Y: %.3f", gF_HudPositionX[client], gF_HudPositionY[client]);
 
 	return Plugin_Handled;
 }
 
 void SetHudPosition(int client)
 {
-	// Top Left
-	if (gI_HudPosition[client] == 0)
-	{
-		gF_HudPositionX[client] = 0.01;
-		gF_HudPositionY[client] = 0.16;
-	}
-	// Top Right
-	else if (gI_HudPosition[client] == 1)
-	{
-		gF_HudPositionX[client] = 0.895;
-		gF_HudPositionY[client] = 0.01;
-	}
-	// Top Center
-	else if (gI_HudPosition[client] == 2)
-	{
-		gF_HudPositionX[client] = 0.455;
-		gF_HudPositionY[client] = 0.01;
-	}
+    // Top Left
+    if (gI_HudPosition[client] == 0)
+    {
+        gF_HudPositionX[client] = 0.01;
+        gF_HudPositionY[client] = 0.16;
+    }
+    // Top Right
+    else if (gI_HudPosition[client] == 1)
+    {
+        if (gB_LandfixType[client] == true)
+        {
+            gF_HudPositionX[client] = 0.882;
+        }
+        else
+        {
+            gF_HudPositionX[client] = 0.868;
+        }
+        
+        gF_HudPositionY[client] = 0.01;
+    }
+    // Top Center
+    else if (gI_HudPosition[client] == 2)
+    {
+        if (gB_LandfixType[client] == true)
+        {
+            gF_HudPositionX[client] = 0.444;
+        }
+        else
+        {
+            gF_HudPositionX[client] = 0.437;
+        }
+        
+        gF_HudPositionY[client] = 0.01;
+    }
 }
 
 public Action Command_LandFixHudColor(int client, int args)
@@ -550,6 +580,10 @@ public Action Command_LandFixHudColor(int client, int args)
 	char buffer[8];
 	Format(buffer, sizeof(buffer), "%d", color);
 	g_cHudColorCookie.Set(client, buffer);
+	
+	// Refresh HUD display with new color
+	RefreshHudDisplay(client);
+	
 	Shavit_PrintToChat(client, "Landfix HUD color set to: %d", color);
 	return Plugin_Handled;
 }
@@ -560,39 +594,29 @@ public Action Command_LandFix(int client, int args)
 		return Plugin_Handled;
 	
 	gB_Enabled[client] = !gB_Enabled[client];
-	Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "On" : "Off");
+
+	if(gB_LandfixType[client] == true)
+	{
+		Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "\x0700ff00On \x07ffffff(Haze)" : "\x07ff0000Off");
+	}
+	else
+	{
+		Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "\x0700ff00On \x07ffffff(Cherry)" : "\x07ff0000Off");
+	}
 	
 	// Save the new Landfix enabled state in the cookie
 	char buffer[2];
 	Format(buffer, sizeof(buffer), "%d", gB_Enabled[client]);
 	g_cEnabledCookie.Set(client, buffer);
 	
+	// Use centralized HUD management
 	if (gB_Enabled[client])
 	{
-		if (g_hudTimers[client] != null)
-		{
-			KillTimer(g_hudTimers[client]);
-			g_hudTimers[client] = null;
-		}
-		
-		if (gB_UseHud[client])
-		{
-			gI_HudTimerID[client]++;
-			iLastValidID[client] = gI_HudTimerID[client];        
-			g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
-		}
+		StartHudTimer(client);
 	}
-	else 
+	else
 	{
-		// Stop the HUD timer when disabling LandFix - if HUD is On
-		if (gB_UseHud[client])
-		{
-			if (g_hudTimers[client] != null)
-			{
-				KillTimer(g_hudTimers[client]);
-				g_hudTimers[client] = null;
-			}
-		}
+		StopHudTimer(client);
 	}
 	
 	return Plugin_Handled;
@@ -601,21 +625,70 @@ public Action Command_LandFix(int client, int args)
 // Hud Timer
 public Action Timer_ShowHudText(Handle timer, any client) 
 {
+	// Validate client and settings
 	if (!IsClientInGame(client) || !gB_Enabled[client] || !gB_UseHud[client]) 
+	{
+		g_hudTimers[client] = null;
 		return Plugin_Stop;
+	}
 	
-	if (gI_HudTimerID[client] != iLastValidID[client])
+	// Validate timer handle
+	if (g_hudTimers[client] != timer)
+	{
+		// This timer is outdated, stop it
 		return Plugin_Stop;
+	}
+	
+	char hudText[32];
+	Format(hudText, sizeof(hudText), "Landfix: %s", gB_LandfixType[client] ? "Haze" : "Cherry");
 	
 	SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], gF_HudTimerDuration,
 		g_iColorRGB[gI_HudColor[client]][0],
 		g_iColorRGB[gI_HudColor[client]][1],
 		g_iColorRGB[gI_HudColor[client]][2],
 		g_iColorRGB[gI_HudColor[client]][3],
-		0.0, 0.0, 0);
-	ShowHudText(client, -1, "Landfix: On");
+		0, 0.0, 0.0, 0.0);
+	ShowHudText(client, -1, hudText);
 	
 	return Plugin_Continue;
+}
+
+// Centralized HUD management functions
+void StopHudTimer(int client)
+{
+	if (g_hudTimers[client] != null)
+	{
+		KillTimer(g_hudTimers[client]);
+		g_hudTimers[client] = null;
+	}
+	
+	// Clear any existing HUD text
+	SetHudTextParams(-1.0, -1.0, 0.01, 255, 255, 255, 0, 0, 0.0, 0.0, 0.0);
+	ShowHudText(client, -1, "");
+}
+
+void StartHudTimer(int client)
+{
+	if (!IsClientInGame(client) || IsFakeClient(client))
+		return;
+		
+	// Always stop any existing timer first
+	StopHudTimer(client);
+	
+	// Only start if both landfix and HUD are enabled
+	if (gB_Enabled[client] && gB_UseHud[client])
+	{
+		g_hudTimers[client] = CreateTimer(gF_HudTimerDuration, Timer_ShowHudText, client, TIMER_REPEAT);
+	}
+}
+
+void RefreshHudDisplay(int client)
+{
+	if (!IsClientInGame(client) || IsFakeClient(client))
+		return;
+		
+	// Stop current timer and restart with new settings
+	StartHudTimer(client);
 }
 
 // More LandFix Stuff -----
