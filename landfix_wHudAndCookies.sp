@@ -644,11 +644,11 @@ public Action Timer_ShowHudText(Handle timer, any client)
 	Format(hudText, sizeof(hudText), "Landfix: %s", gB_LandfixType[client] ? "Haze" : "Cherry");
 	
 	SetHudTextParams(gF_HudPositionX[client], gF_HudPositionY[client], gF_HudTimerDuration,
-		g_iColorRGB[gI_HudColor[client]][0],
-		g_iColorRGB[gI_HudColor[client]][1],
-		g_iColorRGB[gI_HudColor[client]][2],
-		g_iColorRGB[gI_HudColor[client]][3],
-		0.0, 0.0, 0);
+        g_iColorRGB[gI_HudColor[client]][0],
+        g_iColorRGB[gI_HudColor[client]][1],
+        g_iColorRGB[gI_HudColor[client]][2],
+        g_iColorRGB[gI_HudColor[client]][3],
+        0, 0.0, 0.0);
 	ShowHudText(client, -1, hudText);
 	
 	return Plugin_Continue;
