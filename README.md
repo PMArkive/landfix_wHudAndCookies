@@ -1,5 +1,6 @@
 # landfix_wHudAndCookies
 Modified Landfix plugin that saves players settings and has a cutomizable HUD.    
+(You can change the chat colors under the function public Action Command_LandFix)
 
 Special thanks to lukah for making the hud color system and menus.   
 Special thanks to nora for implementing additional features and fixing some handle errors.   
