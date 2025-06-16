@@ -14,4 +14,4 @@ Special thanks to nora for implementing additional features and fixing some hand
 
 Code modified from: https://github.com/enimmy/not-broken-landfix    
 
-![Alt text]([https://i.imgur.com/1VnJUS6.png)
+![Alt text]([i.imgur.com/1VnJUS6.png)
