@@ -598,11 +598,11 @@ public Action Command_LandFix(int client, int args)
 
 	if(gB_LandfixType[client] == true)
 	{
-		Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "\x0700ff00On \x07ffffff(Haze)" : "\x07ff0000Off");
+		Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "\x078efeffOn \x07ffffff(Haze)" : "\x07a082ffOff");
 	}
 	else
 	{
-		Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "\x0700ff00On \x07ffffff(Cherry)" : "\x07ff0000Off");
+		Shavit_PrintToChat(client, "Landfix: %s", gB_Enabled[client] ? "\x078efeffOn \x07ffffff(Cherry)" : "\x07a082ffOff");
 	}
 	
 	// Save the new Landfix enabled state in the cookie
