@@ -1,18 +1,23 @@
 # landfix_wHudAndCookies
-Modified Landfix plugin that saves players settings and has a cutomizable HUD.    
-(You can change the chat colors under the function public Action Command_LandFix)
-
-Special thanks to lukah for making the hud color system and menus.   
-Special thanks to nora for implementing additional features and fixing some handle errors.   
+Unified Landfix (Olivia/Haze) plugin with cutomizable HUD and cookies.     
 
 ## Commands    
-/lf - Enable/Disable Landfix    
-/lftype - Switch Landfix Type    
-/lfhud - Enable/Disable Landfix Hud      
-/lfhudpos <number> - Change Hud Position (0-2) (Position 1 will not work if you're using "hud emo")        
-/lfhudcolor <number> - Change Hud Color (0-5)    
-/lfmenu - Open Landfix Menu    
+/lf - Toggle Landfix (On/Off)    
+/lft - Toggle Landfix Type (Olivia/Haze)    
+/lfh - Toggle Landfix Hud (On/Off)      
+/lfhp <number> - Set Hud Position (0-2) (Position 1 will not work if using "hud emo")      
+/lfhc <number> - Set Hud Color (0-5)    
+/lfm - Open Landfix Main Menu    
+/lfc - Open Landfix Commands Menu   
+/lfa - Open Landfix About Menu    
 
-Code modified from: https://github.com/enimmy/not-broken-landfix    
+Standalone Landfix plugins utilized:    
+https://github.com/KawaiiClan/landfix (Olivia)    
+https://github.com/Haze1337/Landfix (Haze)    
 
-![Alt text](https://i.imgur.com/1VnJUS6.png)    
+Landfix Type idea and base code from:    
+https://github.com/enimmy/not-broken-landfix    
+
+Special thanks to lukah for most of the hud color system and menus and nora for implementing additional features and fixing some handle errors.   
+
+![Alt text](https://i.imgur.com/xh90CCj.png)    
