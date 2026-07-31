@@ -4,9 +4,11 @@ Unified Landfix (Olivia/Haze) plugin with cutomizable HUD and cookies.
 ## Commands    
 /lf - Toggle Landfix (On/Off)    
 /lft - Toggle Landfix Type (Olivia/Haze)    
+
 /lfh - Toggle Landfix Hud (On/Off)      
 /lfhp <number> - Set Hud Position (0-2) (Position 1 will not work if using "hud emo")      
 /lfhc <number> - Set Hud Color (0-5)    
+
 /lfm - Open Landfix Main Menu    
 /lfc - Open Landfix Commands Menu   
 /lfa - Open Landfix About Menu    
