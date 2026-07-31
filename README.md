@@ -1,4 +1,4 @@
-# landfix_wHudAndCookies
+# Landfix with Hud and Cookies
 Unified Landfix (Olivia/Haze) plugin with cutomizable HUD and cookies.     
 
 ## Commands    
@@ -11,6 +11,8 @@ Unified Landfix (Olivia/Haze) plugin with cutomizable HUD and cookies.
 /lfc - Open Landfix Commands Menu   
 /lfa - Open Landfix About Menu    
 
+
+## Other Info
 Standalone Landfix plugins utilized:    
 https://github.com/KawaiiClan/landfix (Olivia)    
 https://github.com/Haze1337/Landfix (Haze)    
